@@ -1,0 +1,59 @@
+name: ai_master
+description: "AI Master: Summary & Assistant — Summarize any article, PDF, or link in seconds."
+publish_to: 'none'
+version: 1.5.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # Firebase
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.7.0
+  firebase_analytics: ^11.6.0
+  firebase_crashlytics: ^4.3.5
+  firebase_messaging: ^15.2.10
+  firebase_remote_config: ^5.4.0
+  google_sign_in: ^6.3.0
+
+  # Local Storage
+  path_provider: ^2.1.5
+  shared_preferences: ^2.3.5
+
+  # Networking
+  http: ^1.3.0
+  dio: ^5.8.0
+
+  # Subscriptions
+  purchases_flutter: ^8.6.0
+
+  # Ads
+  google_mobile_ads: ^6.0.0
+
+  # UI
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+  share_plus: ^10.1.4
+  url_launcher: ^6.3.1
+
+  # Utilities
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  equatable: ^2.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mockito: ^5.4.6
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
