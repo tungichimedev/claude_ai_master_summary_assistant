@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Master - Interactive Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* Phone Frame */
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    background: #000;
+    border-radius: 50px;
+    padding: 12px;
+    box-shadow: 0 0 0 2px #333, 0 0 0 4px #1a1a1a, 0 30px 80px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phone-inner {
+    width: 100%;
+    height: 100%;
+    background: #F8F9FA;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 54px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 28px 0;
+    font-size: 14px;
+    font-weight: 600;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+  .status-bar.dark { color: #fff; }
+  .status-bar.light { color: #2D3436; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons svg { width: 16px; height: 16px; }
+
+  /* Dynamic Island */
+  .dynamic-island {
+    width: 120px;
+    height: 34px;
+    background: #000;
+    border-radius: 20px;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+  }
+
+  /* Screens */
+  .screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    transform: translateX(30px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+  }
+  .screen.exit-left {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ============ SCREEN 1: ONBOARDING ============ */
+  .onboarding {
+    background: linear-gradient(165deg, #6C5CE7 0%, #4834d4 40%, #2d1b69 100%);
+    padding: 54px 0 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .onboarding-content {
+    flex: 1;
+    padding: 30px 24px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .onboarding-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.9);
+    width: fit-content;
+    margin-bottom: 20px;
+  }
+  .onboarding h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .onboarding .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+
+  /* Demo Summary Card */
+  .demo-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 24px;
+    animation: fadeSlideUp 0.8s ease 0.3s both;
+  }
+  .demo-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .demo-source-icon {
+    width: 32px;
+    height: 32px;
+    background: #e74c3c;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .demo-card-meta {
+    flex: 1;
+  }
+  .demo-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .demo-card-source {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+  .demo-card-stats {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0,210,211,0.2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #00D2D3;
+  }
+  .demo-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .demo-bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.45;
+  }
+  .bullet-icon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    background: rgba(0,210,211,0.25);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #00D2D3;
+    margin-top: 1px;
+  }
+
+  .onboarding-actions {
+    padding: 0 24px 40px;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, #00D2D3, #00b894);
+    border: none;
+    border-radius: 16px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 8px 30px rgba(0,210,211,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: -0.2px;
+  }
+  .btn-primary:active {
+    transform: scale(0.97);
+    box-shadow: 0 4px 15px rgba(0,210,211,0.25);
+  }
+  .skip-link {
+    display: block;
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    margin-top: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .skip-link:hover { color: rgba(255,255,255,0.8); }
+
+  /* ============ SCREEN 2: HOME ============ */
+  .home {
+    background: #F8F9FA;
+    padding-top: 54px;
+    padding-bottom: 80px;
+  }
+  .home-scroll {
+    padding: 10px 20px 20px;
+  }
+
+  /* Clipboard banner */
+  .clipboard-banner {
+    background: linear-gradient(135deg, #6C5CE7, #5f4dd0);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: slideDown 0.4s ease;
+  }
+  .clipboard-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .clipboard-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .clipboard-text p {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .clipboard-text span {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+  .clipboard-btn {
+    background: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6C5CE7;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s;
+  }
+  .clipboard-btn:active { transform: scale(0.95); }
+
+  /* Input Zone */
+  .input-zone {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    margin-bottom: 24px;
+  }
+  .input-tabs {
+    display: flex;
+    background: #F0F0F5;
+    border-radius: 12px;
+    padding: 3px;
+    margin-bottom: 16px;
+  }
+  .input-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .input-tab.active {
+    background: #fff;
+    color: #6C5CE7;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .input-area {
+    width: 100%;
+    min-height: 80px;
+    border: 2px dashed #E0E0E8;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #2D3436;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #FAFAFE;
+  }
+  .input-area:focus {
+    border-color: #6C5CE7;
+    border-style: solid;
+  }
+  .input-area::placeholder { color: #aaa; }
+
+  .url-input-wrap {
+    display: none;
+  }
+  .url-input-wrap.visible { display: flex; gap: 8px; }
+  .url-input {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid #E0E0E8;
+    border-radius: 14px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background: #FAFAFE;
+    transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: #6C5CE7; }
+  .paste-btn {
+    padding: 14px 16px;
+    background: #F0F0F5;
+    border: none;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6C5CE7;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .pdf-upload {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #E0E0E8;
+    border-radius: 14px;
+    padding: 30px;
+    text-align: center;
+    background: #FAFAFE;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .pdf-upload.visible { display: flex; }
+  .pdf-upload:hover { border-color: #6C5CE7; }
+  .pdf-upload-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #6C5CE7, #5f4dd0);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .pdf-upload p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2D3436;
+  }
+  .pdf-upload span {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  .summarize-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #6C5CE7, #5541d9);
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 14px;
+    box-shadow: 0 6px 24px rgba(108,92,231,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .summarize-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 3px 12px rgba(108,92,231,0.2);
+  }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .section-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2D3436;
+    letter-spacing: -0.3px;
+  }
+  .section-header a {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6C5CE7;
+    text-decoration: none;
+  }
+
+  /* Summary of the Day */
+  .sotd-card {
+    background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .sotd-card:active { transform: scale(0.98); }
+  .sotd-card::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .sotd-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .sotd-card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+  .sotd-card p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.4;
+  }
+  .sotd-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+  }
+  .sotd-read-time {
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-weight: 600;
+  }
+
+  /* Recent Summaries */
+  .recent-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin: 0 -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .recent-scroll::-webkit-scrollbar { display: none; }
+  .recent-card {
+    min-width: 200px;
+    max-width: 200px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    scroll-snap-align: start;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .recent-card:active { transform: scale(0.97); }
+  .recent-card-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .source-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .recent-card-source span {
+    font-size: 11px;
+    color: #999;
+  }
+  .recent-card h5 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2D3436;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .recent-card p {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ============ BOTTOM TAB BAR ============ */
+  .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: #fff;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    padding-top: 10px;
+    z-index: 50;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 12px;
+    position: relative;
+  }
+  .tab-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #bbb;
+    transition: color 0.2s;
+  }
+  .tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #bbb;
+    transition: color 0.2s;
+  }
+  .tab-item.active .tab-icon { color: #6C5CE7; }
+  .tab-item.active .tab-label { color: #6C5CE7; }
+  .tab-item.active::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    width: 20px;
+    height: 3px;
+    background: #6C5CE7;
+    border-radius: 2px;
+  }
+
+  /* ============ SCREEN 3: SUMMARY RESULT ============ */
+  .summary-result {
+    background: #F8F9FA;
+    padding-top: 54px;
+    padding-bottom: 90px;
+  }
+
+  .summary-top-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 20px 12px;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    background: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+  .back-btn:active { transform: scale(0.9); }
+  .summary-top-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 700;
+    color: #2D3436;
+  }
+
+  .source-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px 16px;
+    margin-bottom: 0;
+  }
+  .source-favicon {
+    width: 40px;
+    height: 40px;
+    background: #2ecc71;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .source-details h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2D3436;
+  }
+  .source-details p {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .source-details .arrow { color: #00D2D3; }
+
+  .saved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #E8F8F5;
+    border-radius: 10px;
+    padding: 6px 14px;
+    margin: 0 20px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #00b894;
+    animation: fadeIn 0.5s ease;
+  }
+
+  /* Format chips */
+  .format-chips {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 16px;
+    overflow-x: auto;
+  }
+  .format-chips::-webkit-scrollbar { display: none; }
+  .format-chip {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1.5px solid #E0E0E8;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .format-chip.active {
+    background: #6C5CE7;
+    color: #fff;
+    border-color: #6C5CE7;
+    box-shadow: 0 4px 12px rgba(108,92,231,0.25);
+  }
+
+  /* Summary content */
+  .summary-content {
+    background: #fff;
+    border-radius: 20px;
+    margin: 0 20px 16px;
+    padding: 20px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+  }
+  .summary-bullet {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #F0F0F5;
+    animation: fadeSlideUp 0.4s ease both;
+  }
+  .summary-bullet:last-child { border-bottom: none; }
+  .summary-bullet:nth-child(1) { animation-delay: 0.1s; }
+  .summary-bullet:nth-child(2) { animation-delay: 0.2s; }
+  .summary-bullet:nth-child(3) { animation-delay: 0.3s; }
+  .summary-bullet:nth-child(4) { animation-delay: 0.4s; }
+  .summary-bullet:nth-child(5) { animation-delay: 0.5s; }
+  .bullet-num {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    background: linear-gradient(135deg, #6C5CE7, #a29bfe);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 2px;
+  }
+  .summary-bullet p {
+    font-size: 14px;
+    color: #2D3436;
+    line-height: 1.55;
+  }
+  .summary-bullet strong {
+    color: #6C5CE7;
+    font-weight: 700;
+  }
+
+  /* Paywall banner */
+  .paywall-soft {
+    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    border-radius: 16px;
+    margin: 0 20px 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .paywall-soft:active { transform: scale(0.98); }
+  .paywall-soft-icon {
+    font-size: 24px;
+  }
+  .paywall-soft-text {
+    flex: 1;
+  }
+  .paywall-soft-text p {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2D3436;
+  }
+  .paywall-soft-text span {
+    font-size: 12px;
+    color: #636e72;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Sticky bottom action bar */
+  .action-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 86px;
+    background: #fff;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    padding: 12px 16px 0;
+    z-index: 50;
+  }
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 14px;
+    transition: transform 0.15s;
+  }
+  .action-btn:active { transform: scale(0.9); }
+  .action-btn-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .action-btn-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+  }
+  .action-save .action-btn-icon {
+    background: #E8F8F5;
+    color: #00b894;
+  }
+  .action-share .action-btn-icon {
+    background: #EDE7FE;
+    color: #6C5CE7;
+  }
+  .action-card .action-btn-icon {
+    background: #FFF3E0;
+    color: #e17055;
+  }
+  .action-copy .action-btn-icon {
+    background: #E3F2FD;
+    color: #0984e3;
+  }
+
+  /* ============ SCREEN 4: LIBRARY ============ */
+  .library {
+    background: #F8F9FA;
+    padding-top: 54px;
+    padding-bottom: 80px;
+  }
+  .library-header {
+    padding: 10px 20px 0;
+  }
+  .library-header h2 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #2D3436;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+
+  .lib-search {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 16px;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 14px;
+  }
+  .lib-search-icon {
+    font-size: 18px;
+    color: #bbb;
+  }
+  .lib-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    color: #2D3436;
+    background: transparent;
+  }
+  .lib-search input::placeholder { color: #bbb; }
+
+  .lib-filters {
+    display: flex;
+    gap: 8px;
+    padding: 0 0 16px;
+    overflow-x: auto;
+  }
+  .lib-filters::-webkit-scrollbar { display: none; }
+  .lib-filter {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1.5px solid #E0E0E8;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .lib-filter.active {
+    background: #6C5CE7;
+    color: #fff;
+    border-color: #6C5CE7;
+  }
+
+  /* Usage bar */
+  .usage-bar {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 0 20px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .usage-bar-info {
+    flex: 1;
+  }
+  .usage-bar-info p {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2D3436;
+    margin-bottom: 6px;
+  }
+  .usage-track {
+    height: 6px;
+    background: #F0F0F5;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .usage-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #e17055, #d63031);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .usage-bar .upgrade-link {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6C5CE7;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  /* Library cards */
+  .lib-cards {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .lib-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .lib-card:active { transform: scale(0.98); }
+  .lib-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .lib-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .lib-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .lib-card-info h5 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2D3436;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .lib-card-info .lib-meta {
+    font-size: 11px;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lib-card-preview {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .lib-card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .lib-tag {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-tech { background: #EDE7FE; color: #6C5CE7; }
+  .tag-business { background: #E3F2FD; color: #0984e3; }
+  .tag-ai { background: #FFF3E0; color: #e17055; }
+  .tag-health { background: #E8F8F5; color: #00b894; }
+  .tag-career { background: #FDECEA; color: #d63031; }
+
+  .swipe-hint {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #ccc;
+    animation: swipeHint 2s ease infinite;
+  }
+
+  /* ============ ANIMATIONS ============ */
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes swipeHint {
+    0%, 100% { transform: translateY(-50%) translateX(0); opacity: 0.4; }
+    50% { transform: translateY(-50%) translateX(-6px); opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  /* Screen nav label */
+  .screen-label {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    z-index: 300;
+  }
+
+  /* Nav arrows */
+  .nav-arrows {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .nav-arrow {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .nav-arrow:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+  }
+  .nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .outer-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .screen-counter {
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.3s;
+  }
+  .screen-dot.active {
+    background: #6C5CE7;
+    width: 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="outer-wrapper">
+  <div class="phone-frame">
+    <div class="phone-inner">
+      <div class="dynamic-island"></div>
+
+      <!-- ==================== SCREEN 1: ONBOARDING ==================== -->
+      <div class="screen onboarding active" id="screen-onboarding">
+        <div class="status-bar dark">
+          <span>9:41</span>
+          <div class="status-icons">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h2v4H1zm4-3h2v7H5zm4-3h2v10H9zm4-4h2v14h-2z"/></svg>
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 11-5.83 10.87l.74-.68A6 6 0 108 2V1z"/><path d="M14 4h-2V2h-1v3h3V4z"/></svg>
+            <svg viewBox="0 0 20 12" fill="currentColor"><rect x="0" y="1" width="16" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="1.5" y="2.5" width="11" height="7" rx="1" fill="currentColor"/><path d="M17.5 4.5v3a1.5 1.5 0 000-3z"/></svg>
+          </div>
+        </div>
+
+        <div class="onboarding-content">
+          <div class="onboarding-badge">
+            <span style="font-size: 14px;">&#9889;</span> AI-Powered Summaries
+          </div>
+
+          <h1>Summarize any article, PDF, or link in seconds</h1>
+          <p class="subtitle">Build your personal knowledge library</p>
+
+          <div class="demo-card">
+            <div class="demo-card-header">
+              <div class="demo-source-icon">TC</div>
+              <div class="demo-card-meta">
+                <div class="demo-card-title">How Remote Work is Changing Tech Hiring in 2026</div>
+                <div class="demo-card-source">TechCrunch &bull; 4 min read</div>
+              </div>
+              <div class="demo-card-stats">
+                <span>&#8594;</span> 5 pts
+              </div>
+            </div>
+            <ul class="demo-bullets">
+              <li>
+                <span class="bullet-icon">1</span>
+                <span><strong>73% of tech companies</strong> now hire fully remote teams, up from 41% in 2023, reshaping global talent markets</span>
+              </li>
+              <li>
+                <span class="bullet-icon">2</span>
+                <span>Average hiring timelines dropped from <strong>45 to 23 days</strong> using AI-powered screening and async interviews</span>
+              </li>
+              <li>
+                <span class="bullet-icon">3</span>
+                <span>Geographic salary leveling is replacing location-based pay, with a <strong>15% cost reduction</strong> for Bay Area companies</span>
+              </li>
+              <li>
+                <span class="bullet-icon">4</span>
+                <span>Skills-based hiring overtakes degree requirements &mdash; <strong>62% of new postings</strong> no longer require a bachelor's degree</span>
+              </li>
+              <li>
+                <span class="bullet-icon">5</span>
+                <span>Hybrid "hub and spoke" offices are becoming the norm, with <strong>3 days remote, 2 optional in-office</strong></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="onboarding-actions">
+          <button class="btn-primary" onclick="goToScreen('screen-home')">Try Your First Summary</button>
+          <a class="skip-link" onclick="goToScreen('screen-home')">Skip to app</a>
+        </div>
+      </div>
+
+      <!-- ==================== SCREEN 2: HOME ==================== -->
+      <div class="screen home" id="screen-home">
+        <div class="status-bar light">
+          <span>9:41</span>
+          <div class="status-icons">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h2v4H1zm4-3h2v7H5zm4-3h2v10H9zm4-4h2v14h-2z"/></svg>
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 11-5.83 10.87l.74-.68A6 6 0 108 2V1z"/><path d="M14 4h-2V2h-1v3h3V4z"/></svg>
+            <svg viewBox="0 0 20 12" fill="currentColor"><rect x="0" y="1" width="16" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="1.5" y="2.5" width="11" height="7" rx="1" fill="currentColor"/><path d="M17.5 4.5v3a1.5 1.5 0 000-3z"/></svg>
+          </div>
+        </div>
+
+        <div class="home-scroll">
+          <!-- Clipboard Banner -->
+          <div class="clipboard-banner">
+            <div class="clipboard-icon">&#128203;</div>
+            <div class="clipboard-text">
+              <p>Summarize copied article?</p>
+              <span>https://techcrunch.com/2026/05/ai-hiring...</span>
+            </div>
+            <button class="clipboard-btn" onclick="goToScreen('screen-summary')">Summarize</button>
+          </div>
+
+          <!-- Input Zone -->
+          <div class="input-zone">
+            <div class="input-tabs">
+              <button class="input-tab active" onclick="switchInputTab(this, 'text')">Text</button>
+              <button class="input-tab" onclick="switchInputTab(this, 'url')">URL</button>
+              <button class="input-tab" onclick="switchInputTab(this, 'pdf')">PDF</button>
+            </div>
+            <textarea class="input-area" id="input-text" placeholder="Paste any text to summarize..."></textarea>
+            <div class="url-input-wrap" id="input-url">
+              <input class="url-input" type="url" placeholder="https://example.com/article">
+              <button class="paste-btn">Paste URL</button>
+            </div>
+            <div class="pdf-upload" id="input-pdf">
+              <div class="pdf-upload-icon">&#128196;</div>
+              <p>Upload PDF</p>
+              <span>Tap to select file (max 3 pages free)</span>
+            </div>
+            <button class="summarize-btn" onclick="goToScreen('screen-summary')">
+              <span>&#10024;</span> Summarize
+            </button>
+          </div>
+
+          <!-- Summary of the Day -->
+          <div class="section-header">
+            <h3>Summary of the Day</h3>
+            <a href="#">View all</a>
+          </div>
+          <div class="sotd-card" onclick="goToScreen('screen-summary')">
+            <div class="sotd-label"><span>&#128293;</span> TRENDING</div>
+            <h4>Apple Announces On-Device AI Models That Run Without Internet</h4>
+            <p>Apple's new Neural Engine chips enable full LLM inference locally, processing up to 30B parameter models on iPhone 17 Pro...</p>
+            <div class="sotd-footer">
+              <span class="sotd-read-time">2 min read</span>
+              <span>&bull; The Verge &bull; 5 key points</span>
+            </div>
+          </div>
+
+          <!-- Recent Summaries -->
+          <div class="section-header">
+            <h3>Recent Summaries</h3>
+            <a href="#" onclick="event.preventDefault(); goToScreen('screen-library')">See all</a>
+          </div>
+          <div class="recent-scroll">
+            <div class="recent-card" onclick="goToScreen('screen-summary')">
+              <div class="recent-card-source">
+                <div class="source-dot" style="background: #e74c3c;">TC</div>
+                <span>TechCrunch &bull; 2h ago</span>
+              </div>
+              <h5>How Remote Work is Changing Tech Hiring</h5>
+              <p>73% of tech companies now hire fully remote teams, up from 41% in 2023...</p>
+            </div>
+            <div class="recent-card" onclick="goToScreen('screen-summary')">
+              <div class="recent-card-source">
+                <div class="source-dot" style="background: #3498db;">HBR</div>
+                <span>HBR &bull; Yesterday</span>
+              </div>
+              <h5>The Productivity Paradox of AI Tools in 2026</h5>
+              <p>Despite widespread adoption, only 34% of companies report measurable gains...</p>
+            </div>
+            <div class="recent-card" onclick="goToScreen('screen-summary')">
+              <div class="recent-card-source">
+                <div class="source-dot" style="background: #2ecc71;">PDF</div>
+                <span>PDF &bull; 3 days ago</span>
+              </div>
+              <h5>Q1 2026 Market Analysis Report</h5>
+              <p>Global markets showed 8.3% growth driven by AI infrastructure spending...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+          <button class="tab-item active" onclick="goToScreen('screen-home')">
+            <div class="tab-icon">&#10024;</div>
+            <span class="tab-label">Summarize</span>
+          </button>
+          <button class="tab-item">
+            <div class="tab-icon">&#129504;</div>
+            <span class="tab-label">Experts</span>
+          </button>
+          <button class="tab-item" onclick="goToScreen('screen-library')">
+            <div class="tab-icon">&#128218;</div>
+            <span class="tab-label">Library</span>
+          </button>
+          <button class="tab-item">
+            <div class="tab-icon">&#128100;</div>
+            <span class="tab-label">Profile</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== SCREEN 3: SUMMARY RESULT ==================== -->
+      <div class="screen summary-result" id="screen-summary">
+        <div class="status-bar light">
+          <span>9:41</span>
+          <div class="status-icons">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h2v4H1zm4-3h2v7H5zm4-3h2v10H9zm4-4h2v14h-2z"/></svg>
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 11-5.83 10.87l.74-.68A6 6 0 108 2V1z"/><path d="M14 4h-2V2h-1v3h3V4z"/></svg>
+            <svg viewBox="0 0 20 12" fill="currentColor"><rect x="0" y="1" width="16" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="1.5" y="2.5" width="11" height="7" rx="1" fill="currentColor"/><path d="M17.5 4.5v3a1.5 1.5 0 000-3z"/></svg>
+          </div>
+        </div>
+
+        <div class="summary-top-bar">
+          <button class="back-btn" onclick="goToScreen('screen-home')">&#8592;</button>
+          <span class="summary-top-title">Summary</span>
+        </div>
+
+        <div class="source-info">
+          <div class="source-favicon" style="background: #e74c3c;">TC</div>
+          <div class="source-details">
+            <h4>TechCrunch</h4>
+            <p>2,347 words <span class="arrow">&#8594;</span> 5 key points</p>
+          </div>
+        </div>
+
+        <div class="saved-badge">&#10003; Saved to Library</div>
+
+        <div class="format-chips">
+          <button class="format-chip active" onclick="setFormatChip(this)">Bullets</button>
+          <button class="format-chip" onclick="setFormatChip(this)">Paragraph</button>
+          <button class="format-chip" onclick="setFormatChip(this)">Key Takeaways</button>
+          <button class="format-chip" onclick="setFormatChip(this)">Action Items</button>
+        </div>
+
+        <div class="summary-content">
+          <div class="summary-bullet">
+            <div class="bullet-num">1</div>
+            <p><strong>73% of tech companies</strong> now hire fully remote teams, a dramatic increase from 41% in 2023, fundamentally reshaping how global talent markets operate.</p>
+          </div>
+          <div class="summary-bullet">
+            <div class="bullet-num">2</div>
+            <p>AI-powered screening and async video interviews have slashed average hiring timelines from <strong>45 to 23 days</strong>, saving companies significant recruitment costs.</p>
+          </div>
+          <div class="summary-bullet">
+            <div class="bullet-num">3</div>
+            <p>Geographic salary leveling is replacing location-based pay bands, resulting in a <strong>15% average cost reduction</strong> for companies previously anchored to Bay Area salaries.</p>
+          </div>
+          <div class="summary-bullet">
+            <div class="bullet-num">4</div>
+            <p>Skills-based hiring is overtaking degree requirements &mdash; <strong>62% of new tech postings</strong> in 2026 no longer require a bachelor's degree, opening doors to non-traditional candidates.</p>
+          </div>
+          <div class="summary-bullet">
+            <div class="bullet-num">5</div>
+            <p>The "hub and spoke" hybrid model is becoming the new standard, with most companies offering <strong>3 days remote, 2 optional in-office</strong> as the default arrangement.</p>
+          </div>
+        </div>
+
+        <div class="paywall-soft">
+          <div class="paywall-soft-icon">&#9889;</div>
+          <div class="paywall-soft-text">
+            <p>You just saved 8 minutes reading</p>
+            <span>Get unlimited summaries <span style="font-weight:700; color:#6C5CE7;">&#8594;</span></span>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+          <button class="action-btn action-save">
+            <div class="action-btn-icon">&#128278;</div>
+            <span class="action-btn-label">Save</span>
+          </button>
+          <button class="action-btn action-share">
+            <div class="action-btn-icon">&#128257;</div>
+            <span class="action-btn-label">Share</span>
+          </button>
+          <button class="action-btn action-card">
+            <div class="action-btn-icon">&#127912;</div>
+            <span class="action-btn-label">Card</span>
+          </button>
+          <button class="action-btn action-copy">
+            <div class="action-btn-icon">&#128203;</div>
+            <span class="action-btn-label">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== SCREEN 4: LIBRARY ==================== -->
+      <div class="screen library" id="screen-library">
+        <div class="status-bar light">
+          <span>9:41</span>
+          <div class="status-icons">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h2v4H1zm4-3h2v7H5zm4-3h2v10H9zm4-4h2v14h-2z"/></svg>
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 11-5.83 10.87l.74-.68A6 6 0 108 2V1z"/><path d="M14 4h-2V2h-1v3h3V4z"/></svg>
+            <svg viewBox="0 0 20 12" fill="currentColor"><rect x="0" y="1" width="16" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="1.5" y="2.5" width="11" height="7" rx="1" fill="currentColor"/><path d="M17.5 4.5v3a1.5 1.5 0 000-3z"/></svg>
+          </div>
+        </div>
+
+        <div class="library-header">
+          <h2>Library</h2>
+          <div class="lib-search">
+            <span class="lib-search-icon">&#128269;</span>
+            <input type="text" placeholder="Search summaries...">
+          </div>
+          <div class="lib-filters">
+            <button class="lib-filter active" onclick="setLibFilter(this)">All</button>
+            <button class="lib-filter" onclick="setLibFilter(this)">Articles</button>
+            <button class="lib-filter" onclick="setLibFilter(this)">PDFs</button>
+            <button class="lib-filter" onclick="setLibFilter(this)">Favorites</button>
+          </div>
+        </div>
+
+        <!-- Usage Bar -->
+        <div class="usage-bar">
+          <div class="usage-bar-info">
+            <p>20 of 20 free summaries used</p>
+            <div class="usage-track">
+              <div class="usage-fill"></div>
+            </div>
+          </div>
+          <a class="upgrade-link">Upgrade</a>
+        </div>
+
+        <!-- Library Cards -->
+        <div class="lib-cards">
+          <div class="lib-card" onclick="goToScreen('screen-summary')">
+            <div class="swipe-hint">&#8592; swipe</div>
+            <div class="lib-card-top">
+              <div class="lib-card-icon" style="background: #e74c3c;">TC</div>
+              <div class="lib-card-info">
+                <h5>How Remote Work is Changing Tech Hiring in 2026</h5>
+                <div class="lib-meta">
+                  <span>&#128196; Article</span>
+                  <span>&bull;</span>
+                  <span>May 14, 2026</span>
+                </div>
+              </div>
+            </div>
+            <p class="lib-card-preview">73% of tech companies now hire fully remote teams, up from 41% in 2023. AI-powered screening has cut hiring timelines in half.</p>
+            <div class="lib-card-tags">
+              <span class="lib-tag tag-tech">Tech</span>
+              <span class="lib-tag tag-career">Career</span>
+            </div>
+          </div>
+
+          <div class="lib-card" onclick="goToScreen('screen-summary')">
+            <div class="lib-card-top">
+              <div class="lib-card-icon" style="background: #3498db;">HBR</div>
+              <div class="lib-card-info">
+                <h5>The Productivity Paradox of AI Tools</h5>
+                <div class="lib-meta">
+                  <span>&#128196; Article</span>
+                  <span>&bull;</span>
+                  <span>May 13, 2026</span>
+                </div>
+              </div>
+            </div>
+            <p class="lib-card-preview">Despite widespread adoption, only 34% of companies report measurable productivity gains from AI tools. The gap lies in implementation strategy.</p>
+            <div class="lib-card-tags">
+              <span class="lib-tag tag-business">Business</span>
+              <span class="lib-tag tag-ai">AI</span>
+            </div>
+          </div>
+
+          <div class="lib-card" onclick="goToScreen('screen-summary')">
+            <div class="lib-card-top">
+              <div class="lib-card-icon" style="background: #2ecc71;">PDF</div>
+              <div class="lib-card-info">
+                <h5>Q1 2026 Market Analysis Report</h5>
+                <div class="lib-meta">
+                  <span>&#128196; PDF</span>
+                  <span>&bull;</span>
+                  <span>May 11, 2026</span>
+                </div>
+              </div>
+            </div>
+            <p class="lib-card-preview">Global markets showed 8.3% growth driven by AI infrastructure spending. Tech sector led with 14.2% gains while energy lagged at 2.1%.</p>
+            <div class="lib-card-tags">
+              <span class="lib-tag tag-business">Business</span>
+            </div>
+          </div>
+
+          <div class="lib-card" onclick="goToScreen('screen-summary')">
+            <div class="lib-card-top">
+              <div class="lib-card-icon" style="background: #9b59b6;">WR</div>
+              <div class="lib-card-info">
+                <h5>Why Sleep is the #1 Performance Hack</h5>
+                <div class="lib-meta">
+                  <span>&#128196; Article</span>
+                  <span>&bull;</span>
+                  <span>May 10, 2026</span>
+                </div>
+              </div>
+            </div>
+            <p class="lib-card-preview">New research from Stanford confirms that consistent 7-8 hours of sleep improves cognitive performance by 29% and emotional regulation by 41%.</p>
+            <div class="lib-card-tags">
+              <span class="lib-tag tag-health">Health</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+          <button class="tab-item" onclick="goToScreen('screen-home')">
+            <div class="tab-icon">&#10024;</div>
+            <span class="tab-label">Summarize</span>
+          </button>
+          <button class="tab-item">
+            <div class="tab-icon">&#129504;</div>
+            <span class="tab-label">Experts</span>
+          </button>
+          <button class="tab-item active" onclick="goToScreen('screen-library')">
+            <div class="tab-icon">&#128218;</div>
+            <span class="tab-label">Library</span>
+          </button>
+          <button class="tab-item">
+            <div class="tab-icon">&#128100;</div>
+            <span class="tab-label">Profile</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Screen Navigation -->
+  <div class="screen-counter">
+    <div class="screen-dot active" id="dot-0"></div>
+    <div class="screen-dot" id="dot-1"></div>
+    <div class="screen-dot" id="dot-2"></div>
+    <div class="screen-dot" id="dot-3"></div>
+  </div>
+  <div class="nav-arrows">
+    <button class="nav-arrow" id="nav-prev" onclick="navPrev()" disabled>&#8592;</button>
+    <button class="nav-arrow" id="nav-next" onclick="navNext()">&#8594;</button>
+  </div>
+</div>
+
+<script>
+  const screenOrder = ['screen-onboarding', 'screen-home', 'screen-summary', 'screen-library'];
+  let currentIndex = 0;
+
+  function goToScreen(id) {
+    const prevScreen = document.querySelector('.screen.active');
+    const nextScreen = document.getElementById(id);
+    if (!nextScreen || prevScreen === nextScreen) return;
+
+    const newIndex = screenOrder.indexOf(id);
+    const goingForward = newIndex > currentIndex;
+
+    // Exit current screen
+    prevScreen.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    prevScreen.style.opacity = '0';
+    prevScreen.style.transform = goingForward ? 'translateX(-30px)' : 'translateX(30px)';
+
+    setTimeout(() => {
+      prevScreen.classList.remove('active');
+      prevScreen.style.transform = '';
+      prevScreen.style.opacity = '';
+
+      // Enter new screen
+      nextScreen.style.transform = goingForward ? 'translateX(30px)' : 'translateX(-30px)';
+      nextScreen.style.opacity = '0';
+      nextScreen.classList.add('active');
+
+      requestAnimationFrame(() => {
+        nextScreen.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        nextScreen.style.opacity = '1';
+        nextScreen.style.transform = 'translateX(0)';
+      });
+
+      // Reset scroll position
+      nextScreen.scrollTop = 0;
+
+      currentIndex = newIndex;
+      updateDots();
+      updateNavButtons();
+    }, 280);
+  }
+
+  function updateDots() {
+    screenOrder.forEach((_, i) => {
+      document.getElementById('dot-' + i).classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  function updateNavButtons() {
+    document.getElementById('nav-prev').disabled = currentIndex === 0;
+    document.getElementById('nav-next').disabled = currentIndex === screenOrder.length - 1;
+  }
+
+  function navPrev() {
+    if (currentIndex > 0) goToScreen(screenOrder[currentIndex - 1]);
+  }
+
+  function navNext() {
+    if (currentIndex < screenOrder.length - 1) goToScreen(screenOrder[currentIndex + 1]);
+  }
+
+  // Input tab switching
+  function switchInputTab(btn, type) {
+    document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.getElementById('input-text').style.display = type === 'text' ? 'block' : 'none';
+    document.getElementById('input-url').classList.toggle('visible', type === 'url');
+    document.getElementById('input-pdf').classList.toggle('visible', type === 'pdf');
+
+    if (type !== 'text') document.getElementById('input-text').style.display = 'none';
+    if (type !== 'url') document.getElementById('input-url').classList.remove('visible');
+    if (type !== 'pdf') document.getElementById('input-pdf').classList.remove('visible');
+  }
+
+  // Format chip selection
+  function setFormatChip(btn) {
+    document.querySelectorAll('.format-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // Library filter selection
+  function setLibFilter(btn) {
+    document.querySelectorAll('.lib-filter').forEach(f => f.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') navNext();
+    if (e.key === 'ArrowLeft') navPrev();
+  });
+</script>
+
+</body>
+</html>

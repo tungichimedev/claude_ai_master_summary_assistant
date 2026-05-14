@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Master — Design Prototype Hub</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: #0F0F1A;
+    color: #fff;
+    min-height: 100vh;
+  }
+  .header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 50%, #00D2D3 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .header h1 {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6C5CE7, #A29BFE, #00D2D3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: #8E8EA0;
+    font-size: 16px;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  .version-badge {
+    display: inline-block;
+    background: rgba(108, 92, 231, 0.2);
+    color: #A29BFE;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-top: 12px;
+    border: 1px solid rgba(108, 92, 231, 0.3);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .card {
+    background: #1A1A2E;
+    border-radius: 20px;
+    padding: 32px;
+    border: 1px solid #2A2A3E;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover {
+    border-color: #6C5CE7;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(108, 92, 231, 0.15);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    border-radius: 20px 20px 0 0;
+  }
+  .card:nth-child(1)::before { background: linear-gradient(90deg, #6C5CE7, #A29BFE); }
+  .card:nth-child(2)::before { background: linear-gradient(90deg, #00B894, #00D2D3); }
+  .card:nth-child(3)::before { background: linear-gradient(90deg, #E17055, #FDCB6E); }
+  .card:nth-child(4)::before { background: linear-gradient(90deg, #0984E3, #74B9FF); }
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  .card:nth-child(1) .card-icon { background: linear-gradient(135deg, #6C5CE7, #A29BFE); }
+  .card:nth-child(2) .card-icon { background: linear-gradient(135deg, #00B894, #00D2D3); }
+  .card:nth-child(3) .card-icon { background: linear-gradient(135deg, #E17055, #FDCB6E); }
+  .card:nth-child(4) .card-icon { background: linear-gradient(135deg, #0984E3, #74B9FF); }
+  .card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .card p {
+    color: #8E8EA0;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .card-screens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .screen-tag {
+    background: rgba(255,255,255,0.06);
+    color: #B0B0C0;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .card-arrow {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    color: #4A4A5E;
+    font-size: 20px;
+    transition: all 0.3s;
+  }
+  .card:hover .card-arrow {
+    color: #6C5CE7;
+    transform: translateX(4px);
+  }
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #4A4A5E;
+    font-size: 13px;
+    border-top: 1px solid #1A1A2E;
+  }
+  .footer strong { color: #8E8EA0; }
+  .roles {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .role {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .role-po { background: rgba(108,92,231,0.2); color: #A29BFE; }
+  .role-ux { background: rgba(0,210,211,0.2); color: #00D2D3; }
+  .role-growth { background: rgba(0,184,148,0.2); color: #00B894; }
+  .role-marketing { background: rgba(225,112,85,0.2); color: #E17055; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AI Master</h1>
+  <p>Interactive Design Prototype — All screens for the AI Summary App</p>
+  <div class="version-badge">PRD v4.0 — Full Team Review</div>
+</div>
+
+<div class="grid">
+
+  <a href="core-screens.html" class="card">
+    <div class="card-icon">&#128241;</div>
+    <span class="card-arrow">&#8594;</span>
+    <h2>Core App Screens</h2>
+    <p>Onboarding, summary-first home screen, summary result with streaming output, and offline library with search.</p>
+    <div class="card-screens">
+      <span class="screen-tag">Onboarding</span>
+      <span class="screen-tag">Home</span>
+      <span class="screen-tag">Summary Result</span>
+      <span class="screen-tag">Library</span>
+    </div>
+    <div class="roles">
+      <span class="role role-po">Product Owner</span>
+      <span class="role role-ux">UX Designer</span>
+    </div>
+  </a>
+
+  <a href="paywall-screens.html" class="card">
+    <div class="card-icon">&#128176;</div>
+    <span class="card-arrow">&#8594;</span>
+    <h2>Paywall & Conversion</h2>
+    <p>Soft paywall, hard paywall with plan toggle, micro-paywall, referral program, and trial confirmation.</p>
+    <div class="card-screens">
+      <span class="screen-tag">Soft Paywall</span>
+      <span class="screen-tag">Hard Paywall</span>
+      <span class="screen-tag">Micro-Paywall</span>
+      <span class="screen-tag">Referral</span>
+      <span class="screen-tag">Trial Active</span>
+    </div>
+    <div class="roles">
+      <span class="role role-growth">Growth Lead</span>
+    </div>
+  </a>
+
+  <a href="marketing-screens.html" class="card">
+    <div class="card-icon">&#127979;</div>
+    <span class="card-arrow">&#8594;</span>
+    <h2>Marketing & Store Listing</h2>
+    <p>Play Store listing mockup, 4 shareable summary card templates, and social media ad creatives.</p>
+    <div class="card-screens">
+      <span class="screen-tag">Play Store</span>
+      <span class="screen-tag">Card Templates</span>
+      <span class="screen-tag">Ad Creatives</span>
+    </div>
+    <div class="roles">
+      <span class="role role-marketing">Marketing Lead</span>
+    </div>
+  </a>
+
+  <a href="expert-screens.html" class="card">
+    <div class="card-icon">&#129302;</div>
+    <span class="card-arrow">&#8594;</span>
+    <h2>Experts & Retention</h2>
+    <p>Expert grid, structured chat (Fitness + Social Media), card creator tool, and retention notifications.</p>
+    <div class="card-screens">
+      <span class="screen-tag">Expert Grid</span>
+      <span class="screen-tag">Fitness Chat</span>
+      <span class="screen-tag">Social Chat</span>
+      <span class="screen-tag">Card Creator</span>
+      <span class="screen-tag">Notifications</span>
+    </div>
+    <div class="roles">
+      <span class="role role-ux">UX Designer</span>
+    </div>
+  </a>
+
+</div>
+
+<div class="footer">
+  <strong>AI Master: Summary & Assistant</strong> — PRD v4.0 Prototype<br>
+  Product Owner + UX Lead + Growth Lead + Marketing Lead<br>
+  May 14, 2026
+</div>
+
+</body>
+</html>

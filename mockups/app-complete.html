@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Master - Complete Interactive Prototype</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--primary:#6C5CE7;--primary-light:#A29BFE;--primary-dark:#4834d4;
+--accent:#00D2D3;--success:#00B894;--warning:#FDCB6E;--danger:#E17055;
+--bg:#F8F9FA;--card:#FFFFFF;--text:#2D3436;--text-sec:#636E72;--text-tri:#B2BEC3;
+--border:#E9ECEF;--shadow:0 2px 8px rgba(0,0,0,0.08);--shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+--radius:12px;--radius-lg:20px;--radius-pill:999px;
+}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#111827;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;color:var(--text)}
+
+/* Phone Frame */
+.phone-frame{width:390px;height:844px;background:#000;border-radius:50px;padding:11px;box-shadow:0 0 0 2px #333,0 0 0 5px #111,0 30px 80px rgba(0,0,0,.6);position:relative;flex-shrink:0}
+.phone-inner{width:100%;height:100%;background:var(--bg);border-radius:40px;overflow:hidden;position:relative}
+.dynamic-island{width:126px;height:34px;background:#000;border-radius:20px;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:300}
+.status-bar{height:54px;display:flex;justify-content:space-between;align-items:center;padding:14px 28px 0;font-size:14px;font-weight:600;position:absolute;top:0;left:0;right:0;z-index:200;pointer-events:none}
+.status-bar.dark{color:#fff}.status-bar.light{color:var(--text)}
+.status-icons{display:flex;gap:5px;align-items:center;font-size:12px}
+.home-indicator{width:134px;height:5px;background:rgba(0,0,0,.2);border-radius:3px;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:300}
+
+/* Screens */
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;visibility:hidden;transition:opacity .3s ease,transform .3s ease;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;z-index:1}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{opacity:1;visibility:visible;transform:translateX(0);z-index:10}
+.screen.slide-in-right{transform:translateX(100%)}
+.screen.slide-in-left{transform:translateX(-100%)}
+.screen.slide-up{transform:translateY(100%)}
+
+/* Tab Bar */
+.tab-bar{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:flex-start;padding-top:8px;z-index:100;border-radius:0 0 40px 40px}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:.4;transition:all .2s;padding:4px 12px;-webkit-tap-highlight-color:transparent}
+.tab-item.active{opacity:1}
+.tab-item svg{width:24px;height:24px}
+.tab-item.active svg{fill:var(--primary);stroke:var(--primary)}
+.tab-item span{font-size:10px;font-weight:600;color:var(--text-sec)}
+.tab-item.active span{color:var(--primary)}
+
+/* Common Components */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 24px;border-radius:var(--radius);font-size:15px;font-weight:700;border:none;cursor:pointer;transition:transform .1s,opacity .2s;-webkit-tap-highlight-color:transparent;font-family:inherit}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;width:100%}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.btn-ghost{background:transparent;color:var(--primary);padding:8px 16px}
+.btn-sm{padding:8px 16px;font-size:13px;font-weight:600;border-radius:8px}
+.chip{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--radius-pill);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:1.5px solid var(--border);background:#fff;color:var(--text-sec)}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.card{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.back-btn{width:36px;height:36px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:transform .1s}
+.back-btn:active{transform:scale(.93)}
+
+/* Overlay / Modal */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:150;opacity:0;visibility:hidden;transition:opacity .3s}
+.overlay.active{opacity:1;visibility:visible}
+.bottom-sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 40px;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);z-index:160}
+.overlay.active .bottom-sheet{transform:translateY(0)}
+
+/* Toast */
+.toast{position:absolute;top:60px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--text);color:#fff;padding:10px 20px;border-radius:var(--radius-pill);font-size:13px;font-weight:600;z-index:400;opacity:0;transition:all .35s cubic-bezier(.32,.72,0,1);white-space:nowrap;display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--success)}
+.toast.purple{background:var(--primary)}
+.toast.teal{background:var(--accent)}
+
+/* Shimmer */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.shimmer{background:linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%);background-size:800px 100%;animation:shimmer 1.5s infinite linear;border-radius:6px}
+
+/* Confetti */
+@keyframes confetti-fall{0%{transform:translateY(-100px) rotate(0deg);opacity:1}100%{transform:translateY(600px) rotate(720deg);opacity:0}}
+.confetti-piece{position:absolute;width:10px;height:10px;border-radius:2px;animation:confetti-fall 3s ease-out forwards}
+
+/* Pulse */
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.pulse{animation:pulse 2s infinite}
+
+/* Skeleton loading */
+.skel{height:14px;border-radius:6px;margin-bottom:12px}
+
+/* Scrollbar hide */
+.hscroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}
+.hscroll::-webkit-scrollbar{display:none}
+.hscroll>*{scroll-snap-align:start;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="phone-frame">
+<div class="phone-inner">
+<div class="dynamic-island"></div>
+<div class="home-indicator"></div>
+
+<!-- Toast container -->
+<div class="toast" id="toast"></div>
+
+
+<!-- ==================== SCREEN: SPLASH ==================== -->
+<div class="screen active" id="splash" style="background:linear-gradient(165deg,#6C5CE7 0%,#4834d4 50%,#2d1b69 100%);display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <div class="status-bar dark"><span>9:41</span><div class="status-icons">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6l5-3 5 3v12l-5-3-5 3V6z"/><path d="M11 6l5-3 5 3v12l-5-3-5 3V6z" opacity=".5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="10" x2="23" y2="14"/></svg>
+  </div></div>
+  <div style="text-align:center;padding:20px" onclick="goTo('onboarding')">
+    <div style="width:100px;height:100px;background:linear-gradient(135deg,#A29BFE,#6C5CE7);border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px rgba(108,92,231,.4)">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+    </div>
+    <div style="font-size:32px;font-weight:800;color:#fff;letter-spacing:-.5px">AI Master</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.6);margin-top:6px">Summary & Assistant</div>
+    <div style="margin-top:60px"><div style="width:32px;height:32px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div></div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: ONBOARDING ==================== -->
+<div class="screen" id="onboarding" style="background:linear-gradient(165deg,#6C5CE7 0%,#4834d4 40%,#2d1b69 100%)">
+  <div class="status-bar dark"><span>9:41</span><div class="status-icons"><span>5G</span><span>100%</span></div></div>
+  <div style="padding:64px 24px 24px;display:flex;flex-direction:column;height:100%">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,.9);width:fit-content;margin-bottom:20px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      Powered by AI
+    </div>
+    <h1 style="font-size:28px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px">Summarize any article, PDF, or link in seconds</h1>
+    <p style="font-size:15px;color:rgba(255,255,255,.65);margin-bottom:20px;line-height:1.5">Build your personal knowledge library</p>
+    <!-- Demo card -->
+    <div style="background:rgba(255,255,255,.12);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:16px;flex:1;overflow:auto;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="width:28px;height:28px;background:#E17055;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700">TC</div>
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5)">TechCrunch</div>
+          <div style="font-size:13px;color:#fff;font-weight:600">How Remote Work is Changing Tech Hiring in 2026</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:10px">5 KEY POINTS</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px;font-size:13px;color:rgba(255,255,255,.85);line-height:1.4">
+          <span style="color:var(--accent)">1.</span> <span><b style="color:#fff">74% of tech companies</b> now hire fully remote, up from 52% in 2024</span>
+        </div>
+        <div style="display:flex;gap:8px;font-size:13px;color:rgba(255,255,255,.85);line-height:1.4">
+          <span style="color:var(--accent)">2.</span> <span><b style="color:#fff">Salary geo-arbitrage</b> is shrinking as companies adopt global pay bands</span>
+        </div>
+        <div style="display:flex;gap:8px;font-size:13px;color:rgba(255,255,255,.85);line-height:1.4">
+          <span style="color:var(--accent)">3.</span> <span><b style="color:#fff">AI screening tools</b> now handle 60% of initial candidate filtering</span>
+        </div>
+        <div style="display:flex;gap:8px;font-size:13px;color:rgba(255,255,255,.85);line-height:1.4">
+          <span style="color:var(--accent)">4.</span> <span><b style="color:#fff">Async communication skills</b> rank as the #1 hiring criteria</span>
+        </div>
+        <div style="display:flex;gap:8px;font-size:13px;color:rgba(255,255,255,.85);line-height:1.4">
+          <span style="color:var(--accent)">5.</span> <span><b style="color:#fff">Hub offices</b> are replacing headquarters for quarterly team meetups</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="background:#fff;color:var(--primary);font-weight:800;border-radius:14px;padding:16px" onclick="goTo('home')">Try Your First Summary</button>
+    <div style="text-align:center;padding:12px;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer" onclick="goTo('home')">Skip</div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: HOME ==================== -->
+<div class="screen" id="home" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:58px 20px 100px;overflow-y:auto;height:100%">
+    <!-- Clipboard banner -->
+    <div id="clipboard-banner" style="background:linear-gradient(135deg,#6C5CE7,#A29BFE);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goTo('loading')">
+      <div style="width:40px;height:40px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#fff">Summarize copied article?</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">techcrunch.com/2026/05/remote-work-hiring...</div>
+      </div>
+      <div style="background:#fff;color:var(--primary);font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;flex-shrink:0">Summarize</div>
+    </div>
+
+    <!-- Input area -->
+    <div class="card" style="padding:0;margin-bottom:16px;overflow:hidden">
+      <div style="display:flex;border-bottom:1px solid var(--border)">
+        <div class="input-tab active" onclick="switchInputTab(this,'text')" style="flex:1;text-align:center;padding:12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--primary);border-bottom:2px solid var(--primary)">Text</div>
+        <div class="input-tab" onclick="switchInputTab(this,'url')" style="flex:1;text-align:center;padding:12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-sec);border-bottom:2px solid transparent">URL</div>
+        <div class="input-tab" onclick="switchInputTab(this,'pdf')" style="flex:1;text-align:center;padding:12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-sec);border-bottom:2px solid transparent">PDF</div>
+      </div>
+      <div id="input-text" style="padding:16px">
+        <textarea style="width:100%;height:90px;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:14px;font-family:inherit;resize:none;outline:none;color:var(--text)" placeholder="Paste any text to summarize..."></textarea>
+      </div>
+      <div id="input-url" style="padding:16px;display:none">
+        <input type="url" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:14px;font-family:inherit;outline:none;color:var(--text)" placeholder="https://example.com/article">
+      </div>
+      <div id="input-pdf" style="padding:16px;display:none;text-align:center" onclick="goTo('micro-paywall')">
+        <div style="border:2px dashed var(--border);border-radius:12px;padding:24px;cursor:pointer">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="1.5" style="margin-bottom:8px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          <div style="font-size:13px;color:var(--text-sec);font-weight:600">Tap to upload PDF</div>
+          <div style="font-size:11px;color:var(--text-tri);margin-top:4px">Up to 30 pages</div>
+        </div>
+      </div>
+      <div style="padding:0 16px 16px">
+        <button class="btn btn-primary" style="border-radius:12px" onclick="goTo('loading')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="margin-right:8px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Summarize
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary of the day -->
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:16px;font-weight:700">Summary of the Day</span>
+        <span style="font-size:12px;color:var(--primary);font-weight:600">Trending</span>
+      </div>
+      <div class="card" style="cursor:pointer;position:relative;overflow:hidden" onclick="goTo('result')">
+        <div style="position:absolute;top:0;right:0;background:var(--warning);color:var(--text);font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 0 8px">HOT</div>
+        <div style="display:flex;gap:12px;align-items:start">
+          <div style="width:44px;height:44px;background:linear-gradient(135deg,#0984E3,#74b9ff);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10A15 15 0 0112 2z"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text-tri);font-weight:600;margin-bottom:2px">BBC News</div>
+            <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:6px">AI Regulation: EU's Landmark Act Takes Effect</div>
+            <div style="font-size:12px;color:var(--text-sec);line-height:1.4">The EU AI Act establishes the world's first comprehensive framework for regulating artificial intelligence...</div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <span style="font-size:10px;background:var(--bg);padding:3px 8px;border-radius:20px;color:var(--text-sec);font-weight:600">5 min read</span>
+              <span style="font-size:10px;background:var(--bg);padding:3px 8px;border-radius:20px;color:var(--text-sec);font-weight:600">Technology</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent summaries -->
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:16px;font-weight:700">Recent Summaries</span>
+        <span style="font-size:12px;color:var(--primary);font-weight:600;cursor:pointer" onclick="switchTab('library')">See All</span>
+      </div>
+      <div class="hscroll" style="margin:0 -20px;padding:0 20px">
+        <div class="card" style="width:200px;cursor:pointer" onclick="goTo('result')">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div style="width:20px;height:20px;background:#E17055;border-radius:4px;font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">TC</div>
+            <span style="font-size:11px;color:var(--text-tri)">2h ago</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;line-height:1.3;margin-bottom:6px">How Remote Work is Changing Tech Hiring</div>
+          <div style="font-size:11px;color:var(--text-tri)">5 key points</div>
+        </div>
+        <div class="card" style="width:200px;cursor:pointer" onclick="goTo('result')">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div style="width:20px;height:20px;background:var(--success);border-radius:4px;font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">M</div>
+            <span style="font-size:11px;color:var(--text-tri)">Yesterday</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;line-height:1.3;margin-bottom:6px">The Science of Building Better Habits</div>
+          <div style="font-size:11px;color:var(--text-tri)">4 key points</div>
+        </div>
+        <div class="card" style="width:200px;cursor:pointer" onclick="goTo('result')">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <div style="width:20px;height:20px;background:var(--primary);border-radius:4px;font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">Ax</div>
+            <span style="font-size:11px;color:var(--text-tri)">2d ago</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;line-height:1.3;margin-bottom:6px">Transformer Architecture Advances 2026</div>
+          <div style="font-size:11px;color:var(--text-tri)">6 key points</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span style="color:var(--primary)">Summarize</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('experts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Experts</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('library')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Library</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: LOADING ==================== -->
+<div class="screen" id="loading" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:64px 20px 20px">
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="width:32px;height:32px;background:#E17055;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700">TC</div>
+        <div>
+          <div style="font-size:12px;color:var(--text-tri)">techcrunch.com</div>
+          <div style="font-size:14px;font-weight:600">How Remote Work is Changing...</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+        <div style="width:20px;height:20px;border:2.5px solid var(--primary);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div>
+        <span style="font-size:13px;color:var(--primary);font-weight:600">Summarizing... analyzing 2,347 words</span>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;height:6px;overflow:hidden;margin-bottom:20px">
+        <div style="height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));border-radius:8px;animation:progress 2.5s ease forwards;width:0">
+          <style>@keyframes progress{0%{width:0}50%{width:60%}80%{width:85%}100%{width:100%}}</style>
+        </div>
+      </div>
+      <!-- Skeleton content -->
+      <div class="shimmer skel" style="width:65%;height:20px;margin-bottom:16px"></div>
+      <div class="shimmer skel" style="width:100%"></div>
+      <div class="shimmer skel" style="width:90%"></div>
+      <div class="shimmer skel" style="width:95%"></div>
+      <div class="shimmer skel" style="width:80%"></div>
+      <div class="shimmer skel" style="width:85%"></div>
+      <div style="height:16px"></div>
+      <div class="shimmer skel" style="width:100%"></div>
+      <div class="shimmer skel" style="width:75%"></div>
+      <div class="shimmer skel" style="width:88%"></div>
+    </div>
+    <div style="text-align:center;margin-top:24px">
+      <div style="font-size:12px;color:var(--text-tri)">Extracting key insights with AI</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: SUMMARY RESULT ==================== -->
+<div class="screen" id="result" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:58px 20px 140px;overflow-y:auto;height:100%">
+    <!-- Source info -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <button class="back-btn" onclick="goTo('home')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:20px;height:20px;background:#E17055;border-radius:4px;font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">TC</div>
+          <span style="font-size:13px;font-weight:600">TechCrunch</span>
+          <span style="font-size:11px;color:var(--text-tri)">2,347 words -> 5 key points</span>
+        </div>
+      </div>
+      <div style="background:rgba(0,184,148,.1);color:var(--success);font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px">Saved</div>
+    </div>
+
+    <!-- Format chips -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px" id="format-chips">
+      <div class="chip active" onclick="switchFormat(this,'bullets')">Bullets</div>
+      <div class="chip" onclick="switchFormat(this,'paragraph')">Paragraph</div>
+      <div class="chip" onclick="switchFormat(this,'takeaways')">Takeaways</div>
+      <div class="chip" onclick="switchFormat(this,'actions')">Actions</div>
+    </div>
+
+    <!-- Content: Bullets (default) -->
+    <div class="card format-content" id="fmt-bullets" style="margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">How Remote Work is Changing Tech Hiring in 2026</h3>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;background:rgba(108,92,231,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:var(--primary)">1</div>
+          <div style="font-size:14px;line-height:1.5"><b>74% of tech companies</b> now operate with fully remote workforces, a significant increase from 52% in 2024, driven by cost savings and talent access.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;background:rgba(108,92,231,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:var(--primary)">2</div>
+          <div style="font-size:14px;line-height:1.5"><b>Global pay bands</b> are replacing location-based salaries, reducing salary geo-arbitrage opportunities for remote workers.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;background:rgba(108,92,231,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:var(--primary)">3</div>
+          <div style="font-size:14px;line-height:1.5"><b>AI screening tools</b> handle 60% of initial candidate filtering, with human recruiters focusing on culture fit and soft skills.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;background:rgba(108,92,231,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:var(--primary)">4</div>
+          <div style="font-size:14px;line-height:1.5"><b>Async communication</b> skills have become the #1 hiring criterion, surpassing traditional technical assessments.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:start">
+          <div style="width:28px;height:28px;background:rgba(108,92,231,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:var(--primary)">5</div>
+          <div style="font-size:14px;line-height:1.5"><b>Hub offices</b> are replacing traditional HQs, with companies investing in quarterly in-person meetups instead of permanent office space.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content: Paragraph -->
+    <div class="card format-content" id="fmt-paragraph" style="margin-bottom:16px;display:none">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">How Remote Work is Changing Tech Hiring in 2026</h3>
+      <p style="font-size:14px;line-height:1.7;color:var(--text)">The tech industry's approach to hiring has fundamentally transformed in 2026, with 74% of companies now operating fully remote - up from 52% just two years ago. This shift has catalyzed several major changes: global pay bands are replacing location-based salaries, effectively ending the era of salary geo-arbitrage. AI screening tools now handle 60% of initial candidate filtering, freeing human recruiters to evaluate culture fit and communication skills. Perhaps most notably, asynchronous communication has emerged as the top hiring criterion, overtaking traditional technical assessments. Companies are also reimagining physical spaces, replacing permanent headquarters with "hub offices" that host quarterly team meetups, striking a balance between remote flexibility and in-person collaboration.</p>
+    </div>
+
+    <!-- Content: Takeaways -->
+    <div class="card format-content" id="fmt-takeaways" style="margin-bottom:16px;display:none">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">Key Takeaways</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:rgba(108,92,231,.06);border-left:3px solid var(--primary);padding:12px 14px;border-radius:0 8px 8px 0">
+          <div style="font-size:11px;color:var(--primary);font-weight:700;margin-bottom:4px">TAKEAWAY 1</div>
+          <div style="font-size:14px;line-height:1.5">Remote work is no longer an experiment - it's the dominant model. Companies that resist will lose access to 74% of the talent pool.</div>
+        </div>
+        <div style="background:rgba(108,92,231,.06);border-left:3px solid var(--primary);padding:12px 14px;border-radius:0 8px 8px 0">
+          <div style="font-size:11px;color:var(--primary);font-weight:700;margin-bottom:4px">TAKEAWAY 2</div>
+          <div style="font-size:14px;line-height:1.5">Soft skills beat hard skills. Invest in async communication, documentation writing, and self-management abilities.</div>
+        </div>
+        <div style="background:rgba(108,92,231,.06);border-left:3px solid var(--primary);padding:12px 14px;border-radius:0 8px 8px 0">
+          <div style="font-size:11px;color:var(--primary);font-weight:700;margin-bottom:4px">TAKEAWAY 3</div>
+          <div style="font-size:14px;line-height:1.5">AI is reshaping recruiting. Candidates should optimize for AI screening while maintaining authentic human connections.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content: Actions -->
+    <div class="card format-content" id="fmt-actions" style="margin-bottom:16px;display:none">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">Action Items</h3>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:14px;line-height:1.5">
+          <input type="checkbox" style="margin-top:4px;accent-color:var(--primary);width:18px;height:18px">
+          <span>Audit your job listings for async-friendly language and remove location-biased requirements</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:14px;line-height:1.5">
+          <input type="checkbox" style="margin-top:4px;accent-color:var(--primary);width:18px;height:18px">
+          <span>Implement AI screening tools for initial candidate filtering to save 40% recruiter time</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:14px;line-height:1.5">
+          <input type="checkbox" style="margin-top:4px;accent-color:var(--primary);width:18px;height:18px">
+          <span>Develop global pay band framework to standardize compensation across regions</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:14px;line-height:1.5">
+          <input type="checkbox" style="margin-top:4px;accent-color:var(--primary);width:18px;height:18px">
+          <span>Plan quarterly hub meetups and evaluate permanent office lease alternatives</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:start;cursor:pointer;font-size:14px;line-height:1.5">
+          <input type="checkbox" style="margin-top:4px;accent-color:var(--primary);width:18px;height:18px">
+          <span>Add async communication assessment to your interview process</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky bottom bar -->
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 20px 32px;display:flex;justify-content:space-around;z-index:50">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer" onclick="showToast('Saved to Library!','purple')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <span style="font-size:10px;color:var(--text-sec);font-weight:600">Save</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer" onclick="showOverlay('share-sheet')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span style="font-size:10px;color:var(--text-sec);font-weight:600">Share</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer" onclick="goTo('card-creator')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      <span style="font-size:10px;color:var(--text-sec);font-weight:600">Card</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer" onclick="showToast('Copied to clipboard!','success')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      <span style="font-size:10px;color:var(--text-sec);font-weight:600">Copy</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: SOFT PAYWALL ==================== -->
+<div class="overlay" id="soft-paywall">
+  <div class="bottom-sheet" style="padding:28px 24px 40px">
+    <div style="width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 20px"></div>
+    <div style="text-align:center">
+      <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">You just summarized 2,347 words in 6 seconds</h2>
+      <p style="font-size:14px;color:var(--text-sec);margin-bottom:4px">That's <b style="color:var(--primary)">8 minutes saved</b>.</p>
+      <p style="font-size:15px;color:var(--text-sec);margin-bottom:20px">Imagine <b>unlimited</b> summaries.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--success);font-size:18px">&#10003;</span> Unlimited summaries</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--success);font-size:18px">&#10003;</span> PDF & document upload</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--success);font-size:18px">&#10003;</span> All AI Expert coaches</div>
+      </div>
+      <button class="btn btn-primary" style="border-radius:14px;padding:16px;font-size:16px" onclick="hideOverlay('soft-paywall');goTo('trial-active')">Start 7-Day Free Trial</button>
+      <div style="padding:12px;font-size:13px;color:var(--text-tri);cursor:pointer" onclick="hideOverlay('soft-paywall')">Maybe later</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: HARD PAYWALL ==================== -->
+<div class="screen" id="hard-paywall" style="background:#fff">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="height:100%;overflow-y:auto;padding-bottom:40px">
+    <div style="background:linear-gradient(165deg,#6C5CE7 0%,#4834d4 100%);padding:64px 24px 32px;text-align:center;border-radius:0 0 32px 32px;position:relative">
+      <div style="position:absolute;top:16px;right:16px;width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+      </div>
+      <h1 style="font-size:26px;font-weight:800;color:#fff;margin-bottom:8px">Unlock AI Master Pro</h1>
+      <p style="font-size:14px;color:rgba(255,255,255,.7)">Summarize without limits</p>
+    </div>
+    <div style="padding:24px">
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;background:rgba(108,92,231,.1);border-radius:12px;display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+          </div>
+          <div><div style="font-size:14px;font-weight:700">Unlimited Summaries</div><div style="font-size:12px;color:var(--text-sec)">Any article, PDF, or link</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;background:rgba(0,184,148,.1);border-radius:12px;display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div><div style="font-size:14px;font-weight:700">All AI Experts</div><div style="font-size:12px;color:var(--text-sec)">Fitness, social media, chef & more</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;background:rgba(0,210,211,.1);border-radius:12px;display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <div><div style="font-size:14px;font-weight:700">Shareable Cards</div><div style="font-size:12px;color:var(--text-sec)">Export beautiful summary cards</div></div>
+        </div>
+      </div>
+      <!-- Plan toggle -->
+      <div style="display:flex;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:16px" id="plan-toggle">
+        <div class="plan-opt" onclick="selectPlan('monthly')" style="flex:1;padding:12px;border-radius:11px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;color:var(--text-sec)">
+          <div>Monthly</div><div style="font-size:16px;font-weight:800;color:var(--text);margin-top:2px">$9.99<span style="font-size:11px;font-weight:500">/mo</span></div>
+        </div>
+        <div class="plan-opt selected" onclick="selectPlan('annual')" style="flex:1;padding:12px;border-radius:11px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;box-shadow:var(--shadow);font-size:13px;font-weight:600;position:relative">
+          <div style="position:absolute;top:-8px;right:8px;background:var(--success);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px">SAVE 50%</div>
+          <div style="color:var(--primary)">Annual</div><div style="font-size:16px;font-weight:800;color:var(--text);margin-top:2px">$59.99<span style="font-size:11px;font-weight:500">/yr</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--text-tri);margin-bottom:20px">or $3.99/week</div>
+      <button class="btn btn-primary" style="border-radius:14px;padding:16px;font-size:16px" onclick="goTo('trial-active')">
+        Start 7-Day Free Trial
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-tri)">Cancel anytime. No charge for 7 days.</div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-top:16px">
+        <span style="font-size:12px;color:var(--primary);cursor:pointer">Restore Purchases</span>
+        <span style="font-size:12px;color:var(--text-tri)">|</span>
+        <span style="font-size:12px;color:var(--primary);cursor:pointer">Terms</span>
+      </div>
+      <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-sec)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Join 2,400+ early adopters
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MICRO PAYWALL (overlay) ==================== -->
+<div class="overlay" id="micro-paywall">
+  <div class="bottom-sheet" style="padding:28px 24px 40px">
+    <div style="width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 20px"></div>
+    <div style="text-align:center">
+      <div style="width:56px;height:56px;background:rgba(225,112,85,.1);border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      </div>
+      <h3 style="font-size:18px;font-weight:800;margin-bottom:6px">PDF Summarization is a Pro Feature</h3>
+      <p style="font-size:14px;color:var(--text-sec);margin-bottom:20px">Upload any PDF up to 30 pages and get instant AI summaries.</p>
+      <button class="btn btn-primary" style="border-radius:14px;padding:14px" onclick="hideOverlay('micro-paywall');goTo('trial-active')">Try Pro Free for 7 Days</button>
+      <div style="padding:12px;font-size:13px;color:var(--text-tri);cursor:pointer" onclick="hideOverlay('micro-paywall')">No thanks</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: TRIAL ACTIVE ==================== -->
+<div class="screen" id="trial-active" style="background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div id="confetti-container" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5"></div>
+  <div style="position:relative;z-index:10">
+    <div style="width:80px;height:80px;background:var(--success);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(0,184,148,.3)">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+    </div>
+    <h1 style="font-size:24px;font-weight:800;margin-bottom:8px">Welcome to AI Master Pro!</h1>
+    <p style="font-size:15px;color:var(--text-sec);margin-bottom:24px">Your 7-day free trial has started</p>
+    <div style="display:flex;flex-direction:column;gap:12px;text-align:left;width:100%;max-width:280px;margin:0 auto 24px">
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px"><div style="width:24px;height:24px;background:rgba(0,184,148,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--success);font-size:14px">&#10003;</div> Unlimited summaries unlocked</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px"><div style="width:24px;height:24px;background:rgba(0,184,148,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--success);font-size:14px">&#10003;</div> All AI Expert coaches available</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px"><div style="width:24px;height:24px;background:rgba(0,184,148,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--success);font-size:14px">&#10003;</div> PDF & document uploads enabled</div>
+    </div>
+    <div style="background:var(--bg);border-radius:12px;padding:12px 20px;font-size:13px;color:var(--text-sec);margin-bottom:28px">
+      Trial ends <b style="color:var(--text)">May 21, 2026</b>
+    </div>
+    <button class="btn btn-primary" style="border-radius:14px;padding:16px;max-width:280px;margin:0 auto" onclick="goTo('home')">Start Summarizing</button>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: EXPERTS ==================== -->
+<div class="screen" id="experts" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:58px 20px 100px;overflow-y:auto;height:100%">
+    <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">AI Experts</h1>
+    <p style="font-size:14px;color:var(--text-sec);margin-bottom:20px">Specialized AI coaches for every need</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <!-- Social Media -->
+      <div class="card" style="padding:0;overflow:hidden;cursor:pointer" onclick="goTo('social-chat')">
+        <div style="background:linear-gradient(135deg,#0984E3,#74b9ff);padding:20px 14px 14px;position:relative">
+          <div style="font-size:32px;margin-bottom:6px">&#128241;</div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Social Media</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">Expert</div>
+        </div>
+        <div style="padding:10px 14px;font-size:11px;color:var(--text-sec)">Captions, hashtags & strategy</div>
+      </div>
+      <!-- Fitness -->
+      <div class="card" style="padding:0;overflow:hidden;cursor:pointer" onclick="goTo('fitness-chat')">
+        <div style="background:linear-gradient(135deg,#00B894,#55efc4);padding:20px 14px 14px;position:relative">
+          <div style="font-size:32px;margin-bottom:6px">&#128170;</div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Fitness Coach</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">Coach</div>
+        </div>
+        <div style="padding:10px 14px;font-size:11px;color:var(--text-sec)">Workouts & nutrition plans</div>
+      </div>
+      <!-- Chef - LOCKED -->
+      <div class="card" style="padding:0;overflow:hidden;cursor:pointer;opacity:.55" onclick="showOverlay('micro-paywall')">
+        <div style="background:linear-gradient(135deg,#E17055,#fab1a0);padding:20px 14px 14px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.3);border-radius:6px;padding:2px 6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <div style="font-size:32px;margin-bottom:6px">&#127859;</div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Expert Chef</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">Coming Soon</div>
+        </div>
+        <div style="padding:10px 14px;font-size:11px;color:var(--text-sec)">Recipes & meal plans</div>
+      </div>
+      <!-- Home Advisor - LOCKED -->
+      <div class="card" style="padding:0;overflow:hidden;cursor:pointer;opacity:.55" onclick="showOverlay('micro-paywall')">
+        <div style="background:linear-gradient(135deg,#00CEC9,#81ecec);padding:20px 14px 14px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.3);border-radius:6px;padding:2px 6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <div style="font-size:32px;margin-bottom:6px">&#127968;</div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Home Advisor</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">Locked</div>
+        </div>
+        <div style="padding:10px 14px;font-size:11px;color:var(--text-sec)">DIY & home improvement</div>
+      </div>
+      <!-- Sales Coach - LOCKED -->
+      <div class="card" style="padding:0;overflow:hidden;cursor:pointer;opacity:.55" onclick="showOverlay('micro-paywall')">
+        <div style="background:linear-gradient(135deg,#E84393,#fd79a8);padding:20px 14px 14px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.3);border-radius:6px;padding:2px 6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <div style="font-size:32px;margin-bottom:6px">&#128176;</div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Sales Coach</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">Locked</div>
+        </div>
+        <div style="padding:10px 14px;font-size:11px;color:var(--text-sec)">Pitch & negotiation</div>
+      </div>
+      <!-- Writing - LOCKED -->
+      <div class="card" style="padding:0;overflow:hidden;cursor:pointer;opacity:.55" onclick="showOverlay('micro-paywall')">
+        <div style="background:linear-gradient(135deg,#A29BFE,#6C5CE7);padding:20px 14px 14px;position:relative">
+          <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.3);border-radius:6px;padding:2px 6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <div style="font-size:32px;margin-bottom:6px">&#9997;&#65039;</div>
+          <div style="font-size:14px;font-weight:700;color:#fff">Writing</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">Locked</div>
+        </div>
+        <div style="padding:10px 14px;font-size:11px;color:var(--text-sec)">Emails, essays & more</div>
+      </div>
+    </div>
+  </div>
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>Summarize</span>
+    </div>
+    <div class="tab-item active" onclick="switchTab('experts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span style="color:var(--primary)">Experts</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('library')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Library</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: FITNESS CHAT ==================== -->
+<div class="screen" id="fitness-chat" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:54px 0 80px;height:100%;display:flex;flex-direction:column">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px;border-bottom:1px solid var(--border);background:#fff">
+      <button class="back-btn" onclick="goTo('experts')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#00B894,#55efc4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">&#128170;</div>
+      <div style="flex:1"><div style="font-size:15px;font-weight:700">Fitness Coach</div><div style="font-size:11px;color:var(--success)">Online</div></div>
+    </div>
+    <!-- Chat content -->
+    <div style="flex:1;overflow-y:auto;padding:16px">
+      <!-- User message -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+        <div style="background:var(--primary);color:#fff;padding:12px 16px;border-radius:18px 18px 4px 18px;max-width:80%;font-size:14px;line-height:1.4">Give me a 20-minute HIIT workout for beginners</div>
+      </div>
+      <!-- AI response - Structured card -->
+      <div style="margin-bottom:14px">
+        <div class="card" style="border:1.5px solid rgba(0,184,148,.2);padding:0;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#00B894,#55efc4);padding:14px 16px">
+            <div style="font-size:16px;font-weight:800;color:#fff">20-Min Beginner HIIT</div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <span style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">Beginner</span>
+              <span style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">20 min</span>
+              <span style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">~200 cal</span>
+            </div>
+          </div>
+          <div style="padding:12px 16px">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead><tr style="color:var(--text-sec)"><th style="text-align:left;padding:6px 0;font-weight:600;font-size:11px">EXERCISE</th><th style="text-align:center;padding:6px 0;font-weight:600;font-size:11px">DURATION</th><th style="text-align:center;padding:6px 0;font-weight:600;font-size:11px">REST</th></tr></thead>
+              <tbody>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:8px 0;font-weight:600">Jumping Jacks</td><td style="text-align:center">30s</td><td style="text-align:center">15s</td></tr>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:8px 0;font-weight:600">Bodyweight Squats</td><td style="text-align:center">30s</td><td style="text-align:center">15s</td></tr>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:8px 0;font-weight:600">Push-up (Knees)</td><td style="text-align:center">30s</td><td style="text-align:center">15s</td></tr>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:8px 0;font-weight:600">Mountain Climbers</td><td style="text-align:center">30s</td><td style="text-align:center">15s</td></tr>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:8px 0;font-weight:600">Lunges</td><td style="text-align:center">30s</td><td style="text-align:center">15s</td></tr>
+                <tr style="border-top:1px solid var(--border)"><td style="padding:8px 0;font-weight:600">High Knees</td><td style="text-align:center">30s</td><td style="text-align:center">15s</td></tr>
+              </tbody>
+            </table>
+            <div style="background:var(--bg);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text-sec);margin-top:10px;text-align:center;font-weight:600">Repeat 2x (2 rounds total)</div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-sm" style="flex:1;background:var(--success);color:#fff;border:none" onclick="showToast('Saved to Library!','purple')">Save</button>
+              <button class="btn btn-sm" style="flex:1;background:var(--bg);color:var(--text)" onclick="showOverlay('share-sheet')">Share</button>
+              <button class="btn btn-sm" style="flex:1;background:var(--bg);color:var(--text)">Modify</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Cross-referral -->
+      <div style="background:rgba(225,112,85,.08);border:1px solid rgba(225,112,85,.15);border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px" onclick="showOverlay('micro-paywall')">
+        <span style="font-size:20px">&#127859;</span>
+        <div style="flex:1;font-size:13px;color:var(--text-sec)">Want a post-workout meal? <b style="color:var(--danger)">Ask the Expert Chef</b></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+    <!-- Input bar -->
+    <div style="padding:8px 16px 24px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+      <input style="flex:1;border:1.5px solid var(--border);border-radius:24px;padding:10px 16px;font-size:14px;font-family:inherit;outline:none" placeholder="Ask your fitness coach...">
+      <div style="width:40px;height:40px;background:var(--success);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: SOCIAL MEDIA CHAT ==================== -->
+<div class="screen" id="social-chat" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:54px 0 80px;height:100%;display:flex;flex-direction:column">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px;border-bottom:1px solid var(--border);background:#fff">
+      <button class="back-btn" onclick="goTo('experts')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#0984E3,#74b9ff);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">&#128241;</div>
+      <div style="flex:1"><div style="font-size:15px;font-weight:700">Social Media Expert</div><div style="font-size:11px;color:#0984E3">Online</div></div>
+    </div>
+    <!-- Chat -->
+    <div style="flex:1;overflow-y:auto;padding:16px">
+      <!-- User message -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+        <div style="background:var(--primary);color:#fff;padding:12px 16px;border-radius:18px 18px 4px 18px;max-width:80%;font-size:14px;line-height:1.4">Write an Instagram caption for a productivity tip</div>
+      </div>
+      <!-- AI response - Post card -->
+      <div style="margin-bottom:14px">
+        <div class="card" style="border:1.5px solid rgba(9,132,227,.15);padding:0;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#0984E3,#74b9ff);padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/></svg>
+              <span style="font-size:14px;font-weight:700;color:#fff">Instagram Post</span>
+            </div>
+          </div>
+          <div style="padding:14px 16px">
+            <p style="font-size:14px;line-height:1.6;margin-bottom:14px">Stop managing your time. Start managing your <b>energy</b>. &#9889;<br><br>The most productive people don't work more hours - they align their hardest tasks with their peak energy windows.<br><br>Here's the shift: Track your energy for 3 days. Notice when you feel sharpest. Schedule deep work ONLY during those hours.<br><br>Everything else? Automate, delegate, or batch it. &#128640;</p>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+              <span style="background:rgba(9,132,227,.08);color:#0984E3;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">#Productivity</span>
+              <span style="background:rgba(0,184,148,.08);color:var(--success);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">#EnergyManagement</span>
+              <span style="background:rgba(108,92,231,.08);color:var(--primary);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">#WorkSmart</span>
+              <span style="background:rgba(225,112,85,.08);color:var(--danger);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">#DeepWork</span>
+              <span style="background:rgba(253,203,110,.15);color:#e17055;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px">#MindsetShift</span>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text-sec);display:flex;align-items:center;gap:6px;margin-bottom:12px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              Best time to post: <b>Tuesday 10 AM</b>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" style="flex:1;background:#0984E3;color:#fff;border:none" onclick="showToast('Caption copied!','success')">Copy Caption</button>
+              <button class="btn btn-sm" style="flex:1;background:var(--bg);color:var(--text)" onclick="showToast('Tags copied!','success')">Copy Tags</button>
+              <button class="btn btn-sm" style="flex:1;background:var(--bg);color:var(--text)" onclick="showToast('Saved!','purple')">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Input bar -->
+    <div style="padding:8px 16px 24px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+      <input style="flex:1;border:1.5px solid var(--border);border-radius:24px;padding:10px 16px;font-size:14px;font-family:inherit;outline:none" placeholder="Ask your social media expert...">
+      <div style="width:40px;height:40px;background:#0984E3;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: LIBRARY ==================== -->
+<div class="screen" id="library" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:58px 20px 100px;overflow-y:auto;height:100%">
+    <h1 style="font-size:24px;font-weight:800;margin-bottom:14px">Library</h1>
+    <!-- Search bar -->
+    <div style="position:relative;margin-bottom:14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="2" style="position:absolute;left:14px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px 12px 12px 42px;font-size:14px;font-family:inherit;outline:none;background:#fff" placeholder="Search summaries...">
+    </div>
+    <!-- Filter chips -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto">
+      <div class="chip active">All</div>
+      <div class="chip" onclick="this.classList.toggle('active')">Articles</div>
+      <div class="chip" onclick="this.classList.toggle('active')">PDFs</div>
+      <div class="chip" onclick="this.classList.toggle('active')">Favorites</div>
+    </div>
+    <!-- Usage bar -->
+    <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;border:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:4px">18 of 20 free summaries used</div>
+        <div style="background:var(--border);height:6px;border-radius:3px;overflow:hidden"><div style="width:90%;height:100%;background:linear-gradient(90deg,var(--warning),var(--danger));border-radius:3px"></div></div>
+      </div>
+      <div style="font-size:11px;color:var(--primary);font-weight:700;cursor:pointer" onclick="goTo('hard-paywall')">Upgrade</div>
+    </div>
+    <!-- Library cards -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="cursor:pointer" onclick="goTo('result')">
+        <div style="display:flex;gap:12px">
+          <div style="width:36px;height:36px;background:#E17055;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;flex-shrink:0">TC</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:3px">How Remote Work is Changing Tech Hiring in 2026</div>
+            <div style="font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">74% of tech companies now operate fully remote. Global pay bands replacing location-based salaries...</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--text-tri)">TechCrunch</span>
+              <span style="font-size:10px;color:var(--text-tri)">2h ago</span>
+              <span style="font-size:9px;background:rgba(108,92,231,.1);color:var(--primary);padding:2px 6px;border-radius:4px;font-weight:600">Tech</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="goTo('result')">
+        <div style="display:flex;gap:12px">
+          <div style="width:36px;height:36px;background:var(--danger);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:3px">Q1 2026 Marketing Strategy Report</div>
+            <div style="font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Comprehensive analysis of digital marketing trends and budget allocation recommendations...</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--text-tri)">PDF Upload</span>
+              <span style="font-size:10px;color:var(--text-tri)">Yesterday</span>
+              <span style="font-size:9px;background:rgba(225,112,85,.1);color:var(--danger);padding:2px 6px;border-radius:4px;font-weight:600">PDF</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="goTo('result')">
+        <div style="display:flex;gap:12px">
+          <div style="width:36px;height:36px;background:var(--success);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;flex-shrink:0">M</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:3px">The Science of Building Better Habits</div>
+            <div style="font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Research shows habit formation takes 66 days on average, not 21 as commonly believed...</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--text-tri)">Medium</span>
+              <span style="font-size:10px;color:var(--text-tri)">May 12</span>
+              <span style="font-size:9px;background:rgba(0,184,148,.1);color:var(--success);padding:2px 6px;border-radius:4px;font-weight:600">Science</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="goTo('result')">
+        <div style="display:flex;gap:12px">
+          <div style="width:36px;height:36px;background:#0984E3;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">BBC</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:3px">AI Regulation: EU's Landmark Act Takes Effect</div>
+            <div style="font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">The European Union's AI Act establishes the world's first comprehensive regulatory framework...</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--text-tri)">BBC News</span>
+              <span style="font-size:10px;color:var(--text-tri)">May 10</span>
+              <span style="font-size:9px;background:rgba(9,132,227,.1);color:#0984E3;padding:2px 6px;border-radius:4px;font-weight:600">Policy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="goTo('result')">
+        <div style="display:flex;gap:12px">
+          <div style="width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;flex-shrink:0">Ax</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:3px">Attention Is Still All You Need: Transformers in 2026</div>
+            <div style="font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Survey of recent advances in transformer architecture including sparse attention and linear transformers...</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--text-tri)">ArXiv</span>
+              <span style="font-size:10px;color:var(--text-tri)">May 8</span>
+              <span style="font-size:9px;background:rgba(108,92,231,.1);color:var(--primary);padding:2px 6px;border-radius:4px;font-weight:600">Research</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>Summarize</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('experts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Experts</span>
+    </div>
+    <div class="tab-item active" onclick="switchTab('library')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span style="color:var(--primary)">Library</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: CARD CREATOR ==================== -->
+<div class="screen" id="card-creator" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:54px 0 0;height:100%;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px">
+      <button class="back-btn" onclick="goTo('result')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <span style="font-size:17px;font-weight:700;flex:1">Create Summary Card</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:0 20px 24px">
+      <!-- Live preview -->
+      <div id="card-preview" style="background:linear-gradient(135deg,#6C5CE7,#A29BFE);border-radius:16px;padding:24px 20px;margin-bottom:20px;color:#fff;aspect-ratio:9/16;max-height:320px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden">
+        <div>
+          <div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">TechCrunch</div>
+          <div style="font-size:16px;font-weight:800;line-height:1.3;margin-bottom:16px">How Remote Work is Changing Tech Hiring in 2026</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;line-height:1.4" id="card-points">
+            <div class="card-point" style="display:flex;gap:6px"><span style="opacity:.6">1.</span><span>74% of tech companies now hire fully remote</span></div>
+            <div class="card-point" style="display:flex;gap:6px"><span style="opacity:.6">2.</span><span>Global pay bands replacing geo-based salaries</span></div>
+            <div class="card-point" style="display:flex;gap:6px"><span style="opacity:.6">3.</span><span>AI handles 60% of candidate screening</span></div>
+            <div class="card-point" style="display:flex;gap:6px"><span style="opacity:.6">4.</span><span>Async skills now #1 hiring criterion</span></div>
+            <div class="card-point" style="display:flex;gap:6px"><span style="opacity:.6">5.</span><span>Hub offices replacing HQs</span></div>
+          </div>
+        </div>
+        <div id="card-watermark" style="font-size:10px;opacity:.5;text-align:center">Made with AI Master</div>
+      </div>
+
+      <!-- Templates -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Template</div>
+        <div class="hscroll">
+          <div class="tmpl-opt active" onclick="selectTemplate(this,'purple')" style="width:56px;height:56px;background:linear-gradient(135deg,#6C5CE7,#A29BFE);border-radius:10px;cursor:pointer;border:2.5px solid var(--primary);flex-shrink:0"></div>
+          <div class="tmpl-opt" onclick="selectTemplate(this,'dark')" style="width:56px;height:56px;background:linear-gradient(135deg,#2D3436,#636E72);border-radius:10px;cursor:pointer;border:2.5px solid transparent;flex-shrink:0"></div>
+          <div class="tmpl-opt" onclick="selectTemplate(this,'colorful')" style="width:56px;height:56px;background:linear-gradient(135deg,#E17055,#FDCB6E);border-radius:10px;cursor:pointer;border:2.5px solid transparent;flex-shrink:0"></div>
+          <div class="tmpl-opt" onclick="selectTemplate(this,'minimal')" style="width:56px;height:56px;background:#fff;border-radius:10px;cursor:pointer;border:2.5px solid transparent;box-shadow:inset 0 0 0 1px var(--border);flex-shrink:0"></div>
+        </div>
+      </div>
+
+      <!-- Aspect ratio -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Aspect Ratio</div>
+        <div style="display:flex;gap:8px">
+          <div class="chip active" onclick="selectRatio(this)">Story 9:16</div>
+          <div class="chip" onclick="selectRatio(this)">Square 1:1</div>
+          <div class="chip" onclick="selectRatio(this)">Wide 16:9</div>
+        </div>
+      </div>
+
+      <!-- Point toggles -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Show Points</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px"> 74% of tech companies now hire fully remote</label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px"> Global pay bands replacing geo-based salaries</label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px"> AI handles 60% of candidate screening</label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px"> Async skills now #1 hiring criterion</label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px"> Hub offices replacing HQs</label>
+        </div>
+      </div>
+
+      <!-- Watermark toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <span style="font-size:13px;font-weight:700">"Made with AI Master" watermark</span>
+        <div style="width:44px;height:26px;background:var(--primary);border-radius:13px;padding:2px;cursor:pointer;position:relative" onclick="this.classList.toggle('off');this.style.background=this.classList.contains('off')?'var(--border)':'var(--primary)'">
+          <div style="width:22px;height:22px;background:#fff;border-radius:50%;transition:transform .2s;transform:translateX(18px)"></div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1;border-radius:12px" onclick="showToast('Card exported!','success')">Export</button>
+        <button class="btn btn-secondary" style="flex:1;border-radius:12px" onclick="showOverlay('share-sheet')">Share</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: PROFILE ==================== -->
+<div class="screen" id="profile" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:58px 20px 100px;overflow-y:auto;height:100%">
+    <!-- Avatar + info -->
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff">JD</div>
+      <div style="font-size:18px;font-weight:700">John Doe</div>
+      <div style="font-size:13px;color:var(--text-sec)">john@example.com</div>
+    </div>
+    <!-- Stats -->
+    <div style="display:flex;gap:0;background:#fff;border-radius:14px;overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)">
+      <div style="flex:1;text-align:center;padding:14px 8px;border-right:1px solid var(--border)">
+        <div style="font-size:20px;font-weight:800;color:var(--primary)">47</div>
+        <div style="font-size:11px;color:var(--text-sec)">Summaries</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:14px 8px;border-right:1px solid var(--border)">
+        <div style="font-size:20px;font-weight:800;color:var(--success)">3.5h</div>
+        <div style="font-size:11px;color:var(--text-sec)">Saved</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:14px 8px">
+        <div style="font-size:20px;font-weight:800;color:var(--danger)">12</div>
+        <div style="font-size:11px;color:var(--text-sec)">Day Streak</div>
+      </div>
+    </div>
+    <!-- Streak calendar -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:14px;font-weight:700">Activity Streak</span>
+        <span style="font-size:20px" class="pulse">&#128293;</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>M</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>T</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>W</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>T</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>F</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary-light);border-radius:6px;opacity:.5"></div>S</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>S</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>M</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>T</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>W</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:var(--primary);border-radius:6px"></div>T</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text-tri)"><div style="width:24px;height:24px;background:rgba(108,92,231,.15);border-radius:6px;border:2px dashed var(--primary-light)"></div>F</div>
+      </div>
+    </div>
+    <!-- Subscription -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px">Subscription</div>
+      <div style="font-size:13px;color:var(--text-sec);margin-bottom:10px">Free Plan -- 2 summaries remaining today</div>
+      <button class="btn btn-primary" style="border-radius:10px;padding:12px" onclick="goTo('hard-paywall')">Upgrade to Pro</button>
+    </div>
+    <!-- Invite Friends -->
+    <div class="card" style="margin-bottom:12px;cursor:pointer;background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(0,210,211,.08))" onclick="goTo('referral')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px">&#127873;</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">Invite Friends</div><div style="font-size:12px;color:var(--text-sec)">Give 5 summaries, get 5 free</div></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    <!-- Settings list -->
+    <div class="card" style="padding:0;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span style="flex:1;font-size:14px;font-weight:600">Theme</span>
+        <span style="font-size:12px;color:var(--text-tri)">Light</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span style="flex:1;font-size:14px;font-weight:600">Notifications</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span style="flex:1;font-size:14px;font-weight:600">Privacy</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span style="flex:1;font-size:14px;font-weight:600">Help & FAQ</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span style="flex:1;font-size:14px;font-weight:600">About</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tri)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    <!-- Rate + Share -->
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-secondary" style="flex:1;border-radius:10px;font-size:13px;gap:6px">&#11088; Rate Us</button>
+      <button class="btn btn-secondary" style="flex:1;border-radius:10px;font-size:13px;gap:6px" onclick="showOverlay('share-sheet')">&#128279; Share App</button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--text-tri)">AI Master v1.0.2 (Build 3)</div>
+  </div>
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>Summarize</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('experts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Experts</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('library')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Library</span>
+    </div>
+    <div class="tab-item active" onclick="switchTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span style="color:var(--primary)">Profile</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== SCREEN: REFERRAL ==================== -->
+<div class="screen" id="referral" style="background:var(--bg)">
+  <div class="status-bar light"><span>9:41</span><div class="status-icons"><span style="font-size:12px">5G</span><span style="font-size:12px">100%</span></div></div>
+  <div style="padding:54px 0 0;height:100%;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px">
+      <button class="back-btn" onclick="goTo('profile')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <span style="font-size:17px;font-weight:700;flex:1">Invite Friends</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:0 20px 32px">
+      <!-- Hero -->
+      <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:16px;padding:24px;text-align:center;margin-bottom:20px;color:#fff">
+        <div style="font-size:36px;margin-bottom:8px">&#127873;</div>
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Give 5, Get 5</h2>
+        <p style="font-size:14px;opacity:.8">Share your link. Friends get 5 free summaries. You get 5 for each friend who joins.</p>
+      </div>
+      <!-- Referral link -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Your Referral Link</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">aimaster.app/invite/john-doe-x7k9</div>
+          <button class="btn btn-sm" style="background:var(--primary);color:#fff;border:none;flex-shrink:0" onclick="showToast('Link copied!','success')">Copy</button>
+        </div>
+      </div>
+      <!-- Share buttons -->
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <div style="flex:1;background:#25D366;border-radius:12px;padding:12px;text-align:center;cursor:pointer" onclick="showToast('Shared!','teal')">
+          <div style="font-size:20px;margin-bottom:4px">&#128172;</div>
+          <div style="font-size:10px;color:#fff;font-weight:600">WhatsApp</div>
+        </div>
+        <div style="flex:1;background:#1DA1F2;border-radius:12px;padding:12px;text-align:center;cursor:pointer" onclick="showToast('Shared!','teal')">
+          <div style="font-size:20px;margin-bottom:4px">&#128038;</div>
+          <div style="font-size:10px;color:#fff;font-weight:600">Twitter</div>
+        </div>
+        <div style="flex:1;background:linear-gradient(135deg,#833AB4,#E1306C,#F77737);border-radius:12px;padding:12px;text-align:center;cursor:pointer" onclick="showToast('Shared!','teal')">
+          <div style="font-size:20px;margin-bottom:4px">&#128247;</div>
+          <div style="font-size:10px;color:#fff;font-weight:600">Instagram</div>
+        </div>
+        <div style="flex:1;background:var(--text);border-radius:12px;padding:12px;text-align:center;cursor:pointer" onclick="showToast('Link copied!','success')">
+          <div style="font-size:20px;margin-bottom:4px">&#128279;</div>
+          <div style="font-size:10px;color:#fff;font-weight:600">Copy</div>
+        </div>
+      </div>
+      <!-- Your referrals -->
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px">Your Referrals</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:36px;height:36px;background:rgba(0,184,148,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--success)">SA</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">Sarah A.</div><div style="font-size:11px;color:var(--text-tri)">Joined May 10</div></div>
+          <div style="font-size:11px;color:var(--success);font-weight:600;background:rgba(0,184,148,.1);padding:3px 8px;border-radius:6px">+5 earned</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:36px;height:36px;background:rgba(9,132,227,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0984E3">MK</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">Mike K.</div><div style="font-size:11px;color:var(--text-tri)">Joined May 12</div></div>
+          <div style="font-size:11px;color:var(--success);font-weight:600;background:rgba(0,184,148,.1);padding:3px 8px;border-radius:6px">+5 earned</div>
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:13px;font-weight:600;color:var(--text-sec);margin-bottom:6px">2/5 friends joined</div>
+          <div style="background:var(--border);height:6px;border-radius:3px;overflow:hidden;margin-bottom:4px"><div style="width:40%;height:100%;background:var(--primary);border-radius:3px"></div></div>
+          <div style="font-size:11px;color:var(--primary);font-weight:600">10 bonus summaries earned</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SHARE SHEET OVERLAY ==================== -->
+<div class="overlay" id="share-sheet">
+  <div class="bottom-sheet" style="padding:20px 24px 40px">
+    <div style="width:40px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 16px"></div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Share</div>
+    <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:8px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:56px" onclick="hideOverlay('share-sheet');showToast('Copied!','success')">
+        <div style="width:50px;height:50px;background:var(--bg);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">&#128203;</div>
+        <span style="font-size:10px;color:var(--text-sec)">Copy</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:56px" onclick="hideOverlay('share-sheet');showToast('Shared!','teal')">
+        <div style="width:50px;height:50px;background:#25D366;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">&#128172;</div>
+        <span style="font-size:10px;color:var(--text-sec)">WhatsApp</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:56px" onclick="hideOverlay('share-sheet');showToast('Shared!','teal')">
+        <div style="width:50px;height:50px;background:#1DA1F2;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">&#128038;</div>
+        <span style="font-size:10px;color:var(--text-sec)">Twitter</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:56px" onclick="hideOverlay('share-sheet');showToast('Shared!','teal')">
+        <div style="width:50px;height:50px;background:linear-gradient(135deg,#833AB4,#E1306C);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">&#128247;</div>
+        <span style="font-size:10px;color:var(--text-sec)">Instagram</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:56px" onclick="hideOverlay('share-sheet');showToast('Shared!','teal')">
+        <div style="width:50px;height:50px;background:#0A66C2;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">&#128188;</div>
+        <span style="font-size:10px;color:var(--text-sec)">LinkedIn</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:56px" onclick="hideOverlay('share-sheet');showToast('Shared!','teal')">
+        <div style="width:50px;height:50px;background:var(--text);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">&#9993;&#65039;</div>
+        <span style="font-size:10px;color:var(--text-sec)">Email</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end phone-inner -->
+</div><!-- end phone-frame -->
+
+
+<script>
+// Navigation state
+let currentScreen = 'splash';
+let history = ['splash'];
+let softPaywallShown = false;
+let resultViewCount = 0;
+
+// Auto-advance splash
+setTimeout(() => { goTo('onboarding'); }, 2000);
+
+// Navigate to a screen
+function goTo(id) {
+  const prev = document.getElementById(currentScreen);
+  const next = document.getElementById(id);
+  if (!prev || !next || id === currentScreen) return;
+
+  prev.classList.remove('active');
+  next.classList.remove('slide-in-right','slide-in-left','slide-up');
+  next.classList.add('active');
+  currentScreen = id;
+  history.push(id);
+
+  // Loading auto-advance
+  if (id === 'loading') {
+    setTimeout(() => { goTo('result'); }, 2500);
+  }
+
+  // Show soft paywall after first result view
+  if (id === 'result') {
+    resultViewCount++;
+    if (resultViewCount === 1 && !softPaywallShown) {
+      softPaywallShown = true;
+      setTimeout(() => { showOverlay('soft-paywall'); }, 1500);
+    }
+  }
+
+  // Confetti on trial
+  if (id === 'trial-active') {
+    setTimeout(launchConfetti, 200);
+  }
+}
+
+function goBack() {
+  if (history.length > 1) {
+    history.pop();
+    const prevId = history[history.length - 1];
+    const cur = document.getElementById(currentScreen);
+    const prev = document.getElementById(prevId);
+    if (cur) cur.classList.remove('active');
+    if (prev) prev.classList.add('active');
+    currentScreen = prevId;
+  }
+}
+
+// Tab switching
+function switchTab(tabId) {
+  // Hide all main screens
+  ['home','experts','library','profile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const target = document.getElementById(tabId);
+  if (target) {
+    target.classList.add('active');
+    currentScreen = tabId;
+    history.push(tabId);
+  }
+}
+
+// Input tab switching
+function switchInputTab(el, type) {
+  document.querySelectorAll('.input-tab').forEach(t => {
+    t.style.color = 'var(--text-sec)';
+    t.style.borderBottomColor = 'transparent';
+  });
+  el.style.color = 'var(--primary)';
+  el.style.borderBottomColor = 'var(--primary)';
+  document.getElementById('input-text').style.display = type === 'text' ? 'block' : 'none';
+  document.getElementById('input-url').style.display = type === 'url' ? 'block' : 'none';
+  document.getElementById('input-pdf').style.display = type === 'pdf' ? 'block' : 'none';
+}
+
+// Format switching on result
+function switchFormat(el, fmt) {
+  document.querySelectorAll('#format-chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.format-content').forEach(c => c.style.display = 'none');
+  const target = document.getElementById('fmt-' + fmt);
+  if (target) target.style.display = 'block';
+}
+
+// Overlay show/hide
+function showOverlay(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+function hideOverlay(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('active');
+}
+
+// Click backdrop to dismiss overlays
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
+});
+
+// Toast
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '');
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Plan toggle
+function selectPlan(plan) {
+  const opts = document.querySelectorAll('.plan-opt');
+  opts.forEach(o => { o.style.background = 'transparent'; o.style.boxShadow = 'none'; o.classList.remove('selected'); });
+  if (plan === 'annual') {
+    opts[1].style.background = '#fff';
+    opts[1].style.boxShadow = 'var(--shadow)';
+  } else {
+    opts[0].style.background = '#fff';
+    opts[0].style.boxShadow = 'var(--shadow)';
+  }
+}
+
+// Template selection for card creator
+function selectTemplate(el, theme) {
+  document.querySelectorAll('.tmpl-opt').forEach(t => { t.style.borderColor = 'transparent'; t.classList.remove('active'); });
+  el.style.borderColor = 'var(--primary)';
+  el.classList.add('active');
+  const preview = document.getElementById('card-preview');
+  const themes = {
+    purple: 'linear-gradient(135deg,#6C5CE7,#A29BFE)',
+    dark: 'linear-gradient(135deg,#2D3436,#636E72)',
+    colorful: 'linear-gradient(135deg,#E17055,#FDCB6E)',
+    minimal: 'linear-gradient(135deg,#ffffff,#f0f0f0)'
+  };
+  preview.style.background = themes[theme];
+  preview.style.color = theme === 'minimal' ? '#2D3436' : '#fff';
+}
+
+// Aspect ratio
+function selectRatio(el) {
+  el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Confetti
+function launchConfetti() {
+  const container = document.getElementById('confetti-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const colors = ['#6C5CE7','#A29BFE','#00D2D3','#00B894','#FDCB6E','#E17055','#fd79a8','#74b9ff'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 1.5 + 's';
+    piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    container.appendChild(piece);
+  }
+}
+</script>
+
+</body>
+</html>
